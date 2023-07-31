@@ -2,7 +2,7 @@ import os
 import requests
 import json
 import redis
-from flask import Flask , jsonify
+from flask import Flask , jsonify , make_response
 import boto3
 
 
@@ -27,6 +27,7 @@ def get_from_cache(*,host=None):
 
       output = json.loads(cached_result)
       output["cached"] = "True"
+      output["apiServer"] = hostname
       return output
 
     else:
@@ -50,6 +51,7 @@ def set_to_cache(*,host=None,ipgeolocation_key=None):
     geodata = requests.get(url=ipgeolocation_url)
     geodata = geodata.json()
     geodata["cached"] = "False"
+    geodata["apiServer"] = hostname
     redis_con.set(host,json.dumps(geodata))
     redis_con.expire(host,3600)
 
@@ -64,7 +66,7 @@ def set_to_cache(*,host=None,ipgeolocation_key=None):
 
 app = Flask(__name__)
 
-@app.route('/api/v1/<ip>')
+@app.route('/ip/<ip>',strict_slashes=False)
 def ipstack(ip=None):
   
   output = get_from_cache(host=ip)
@@ -77,7 +79,9 @@ def ipstack(ip=None):
 
   return jsonify(output)
 
-
+@app.route('/status',strict_slashes=False)
+def check_status():
+  return make_response("",200)
 
     
 
@@ -86,7 +90,8 @@ def ipstack(ip=None):
 
 
 if __name__ == "__main__":
-
+ 
+  hostname = os.getenv("HOSTNAME","none")
   redis_port = os.getenv("REDIS_PORT","6379")
   redis_host = os.getenv("REDIS_HOST",None)
   app_port = os.getenv("APP_PORT","8080")
@@ -104,4 +109,3 @@ if __name__ == "__main__":
 
       
   app.run(port=app_port,host="0.0.0.0",debug=True)
-  
