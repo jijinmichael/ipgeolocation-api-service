@@ -3,7 +3,9 @@ Flask api service for https://app.ipgeolocation.io
 
 To build this image open a terminal then 
 $ git clone https://github.com/jijinmichael/ipgeolocation-api-service.git
+
 $ cd ipgeolocation-api-service
+
 $ docker image build -t <imagename> .
 
 Please note that the package named docker which is preinstalled on the system.
